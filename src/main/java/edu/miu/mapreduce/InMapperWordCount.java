@@ -4,9 +4,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -16,13 +17,15 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class InMapperWordCount extends Configured implements Tool {
@@ -54,7 +57,7 @@ public class InMapperWordCount extends Configured implements Tool {
                 word.set(key);
                 int count = H.get(key).size();
                 int sum = H.get(key).stream().mapToInt(value -> value).sum();
-                pair.setAverage((double) (sum/count));
+                pair.setAverage((double) (sum / count));
                 pair.setCount(count);
                 context.write(word, pair);
             }
@@ -102,17 +105,18 @@ public class InMapperWordCount extends Configured implements Tool {
         }
     }
 
-    public static class WordCountReducer extends Reducer<Text, Pair, Text, IntWritable> {
-        private IntWritable result = new IntWritable();
+    public static class WordCountReducer extends Reducer<Text, Pair, Text, DoubleWritable> {
+        private DoubleWritable result = new DoubleWritable();
 
         @Override
         public void reduce(Text key, Iterable<Pair> values, Context context) throws IOException, InterruptedException {
             int sum = 0;
-            System.out.println(values);
+            int count = 0;
             for (Pair val : values) {
-                sum += val.getAverage();
+                sum += val.getAverage() * val.getCount();
+                count += val.getCount();
             }
-            result.set(sum);
+            result.set((double) sum / count);
             context.write(key, result);
         }
     }
