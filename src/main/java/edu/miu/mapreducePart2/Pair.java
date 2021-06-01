@@ -1,117 +1,75 @@
-package edu.miu.mapreduce;
+package edu.miu.mapreducePart2;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
+import org.glassfish.grizzly.Writable;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Objects;
-
+import java.io.Serializable;
 
 public class Pair implements WritableComparable<Pair> {
-    private Text sum;
-    private Text count;
+    Text key;
+    Text value;
 
-
-    public Pair(Text sum, Text count) {
-        this.sum = sum;
-        this.count = count;
+    public Pair(Text key, Text value) {
+        this.key = key;
+        this.value = value;
     }
-
-
-    public Pair(String sum, String count){
-        this(new Text(sum), new Text(count));
-    }
-
 
     public Pair() {
-        this.sum = new Text();
-        this.count = new Text();
+
     }
 
-
-    @Override
-    public int compareTo(Pair o) {
-        int sumCheck = this.sum.compareTo(o.getsum());
-        if (sumCheck != 0)
-            return sumCheck;
-
-
-        if (count.toString().equals("*")) {
-            return -1;
-        }else if (o.getcount().toString().equals("*")) {
-            return 1;
-        }
-        return count.compareTo(o.getcount());
+    public Text getKey() {
+        return key;
     }
 
-    @Override
-    public void write(DataOutput out) throws IOException {
-        sum.write(out);
-        count.write(out);
+    public void setKey(Text key) {
+        this.key = key;
     }
 
-
-    @Override
-    public void readFields(DataInput in) throws IOException {
-        sum.readFields(in);
-        count.readFields(in);
+    public void setValue(Text value){
+        this.value = value;
     }
 
+    public Text getValue() {
+        return value;
+    }
 
     @Override
     public String toString() {
-        return String.format("(%s,%s)", sum, count);
+        return "Pair{" +
+                "key=" + key +
+                ", value=" + value +
+                "} \r\n";
     }
 
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-
-
-        if (o == null)
-            return false;
-
-
-        if (!(o instanceof Pair))
-            return false;
-
-
-        Pair word = (Pair) o;
-
-
-        if (!Objects.equals(count, word.count))
-            return false;
-
-
-        return Objects.equals(sum, word.sum);
+    public void write(DataOutput out) throws IOException {
+        key.write(out);
+        value.write(out);
     }
-
 
     @Override
-    public int hashCode() {
-        return new Text(sum == null ? "" : sum.toString() + count == null ? "" : count.toString()).hashCode();
+    public void readFields(DataInput in) throws IOException {
+        key.readFields(in);
+        value.readFields(in);
     }
 
+    @Override
+    public int compareTo(Pair P) {
+        int keyCompare = this.key.compareTo(P.getKey());
+        int valueCompare = this.value.compareTo(P.getValue());
 
-    public void setsum(String sum) {
-        this.sum.set(sum);
-    }
+        if(keyCompare == 0){
+            if(valueCompare < 0) return -1;
+            else if (valueCompare > 0) return 1;
+            return 0;
+        }
 
-
-    public void setcount(String count) {
-        this.count.set(count);
-    }
-
-
-    public Text getsum() {
-        return sum;
-    }
-
-
-    public Text getcount() {
-        return count;
+        return keyCompare;
     }
 }

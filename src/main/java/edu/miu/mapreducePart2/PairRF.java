@@ -1,12 +1,10 @@
-package edu.miu.mapreduce;
+package edu.miu.mapreducePart2;
 
-import java.io.File;
-import java.io.IOException;
-
+import edu.miu.mapreduce.HadoopUtils;
+import edu.miu.mapreduce.WordCount;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -22,68 +20,57 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import java.io.File;
+import java.io.IOException;
+
 public class PairRF extends Configured implements Tool
 {
 
-    public static class PairRFMapper extends Mapper<LongWritable, Text, Text, IntWritable>
+    public static class PairRFMapper extends Mapper<LongWritable, Text, Pair, IntWritable>
     {
 
-        private DoubleWritable ONE = new DoubleWritable(1);
-        private DoubleWritable totalCount = new DoubleWritable();
-        private int count = 0;
-        final private Text CONST_STAR_CHAR = new Text("*");
+        private final IntWritable ONE = new IntWritable(1);
 
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String[] words = value.toString().split("\\s+");
+
             if (words.length > 1) {
-                for (int i = 0; i < words.length - 1; i++) {
-                    count = 0;
+                for (int i = 0; i < words.length - 2; i++) {
                     String termU = words[i];
-                    for (int j = i + 1; j < words.length; j++) {
+
+                    for (int j = i + 1; j < words.length - 1; j++) {
                         String termV = words[j];
                         if (termU.equalsIgnoreCase(termV))
                             break;
-                        count++;
-                        context.write(new Pair(termU, termV), ONE);
+                        Pair pair = new Pair();
+                        pair.getKey().set(termU);
+                        pair.getValue().set(termV);
+                        System.out.println("XXXXXX" + pair);
+                        context.write(pair, ONE);
                     }
-                    totalCount.set((double) count);
-                    context.write(new Pair(words[i], "*"), totalCount);
                 }
             }
         }
     }
 
-    public static class PairRFReducer extends Reducer<Pair, DoubleWritable, Pair, DoubleWritable>
+    public static class PairRFReducer extends Reducer<Pair, IntWritable, Pair, IntWritable>
     {
         private DoubleWritable totalCount = new DoubleWritable();
         private Text currentWord = new Text("");
         final private Text CONST_STAR_CHAR = new Text("*");
 
         @Override
-        protected void reduce(Pair key, Iterable<DoubleWritable> counts, Context context)
-                throws IOException, InterruptedException {
-            if (key.getcount().equals(CONST_STAR_CHAR)) {
-                if (key.getsum().equals(currentWord)) {
-                    totalCount.set(totalCount.get() + getCountSum(counts));
-                } else {
-                    currentWord.set(key.getsum());
-                    totalCount.set(0);
-                    totalCount.set(getCountSum(counts));
-                }
-            } else {
-                int count = getCountSum(counts);
-                context.write(key, new DoubleWritable((double) count / totalCount.get()));
+        public void reduce(Pair pair, Iterable<IntWritable> values, Context context)
+                throws IOException, InterruptedException{
+            int sum = 0;
+            for(IntWritable value: values){
+                sum += value.get();
             }
+            System.out.println(sum);
+            context.write(pair, new IntWritable(sum));
         }
 
-        private int getCountSum(Iterable<DoubleWritable> counts) {
-            int total = 0;
-            for (DoubleWritable count : counts) {
-                total += count.get();
-            }
-            return total;
-        }
     }
 
     public static void main(String[] args) throws Exception
