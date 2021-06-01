@@ -6,3 +6,7 @@
 /DATA/output/
 /DATA/jars/BD.jar
 /gradle/wrapper/
+
+.idea
+
+.DS_Store
