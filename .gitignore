@@ -8,3 +8,5 @@
 /gradle/wrapper/
 
 .idea
+
+.DS_Store
