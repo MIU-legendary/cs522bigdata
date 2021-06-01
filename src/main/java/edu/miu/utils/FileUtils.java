@@ -1,4 +1,6 @@
-package edu.miu.mapreduce;
+package edu.miu.utils;
+
+import edu.miu.mapreduce.Window;
 
 import java.util.ArrayList;
 import java.util.List;

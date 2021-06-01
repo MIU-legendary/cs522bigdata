@@ -41,9 +41,9 @@ public class Pair implements WritableComparable<Pair> {
     @Override
     public String toString() {
         return "Pair{" +
-                "key=" + key +
-                ", value=" + value +
-                "} \r\n";
+                "key=" + key.toString() +
+                ", value=" + value.toString() +
+                "}";
     }
 
 

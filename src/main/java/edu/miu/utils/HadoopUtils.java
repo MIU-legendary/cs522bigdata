@@ -1,4 +1,4 @@
-package edu.miu.mapreduce;
+package edu.miu.utils;
 
 import java.io.IOException;
 

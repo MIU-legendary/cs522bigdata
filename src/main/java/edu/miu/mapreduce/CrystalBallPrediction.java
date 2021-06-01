@@ -1,5 +1,6 @@
 package edu.miu.mapreduce;
 
+import edu.miu.utils.HadoopUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -22,7 +23,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +38,7 @@ public class CrystalBallPrediction extends Configured implements Tool {
         @Override
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             try {
-                List<Window> windows = edu.miu.mapreduce.FileUtils.extractWindowFromString(value.toString());
+                List<Window> windows = edu.miu.utils.FileUtils.extractWindowFromString(value.toString());
                 System.out.println(windows);
 
             } catch (Exception $e) {

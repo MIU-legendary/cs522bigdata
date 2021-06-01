@@ -1,6 +1,7 @@
 package edu.miu.mapreducePart2;
 
-import edu.miu.mapreduce.HadoopUtils;
+import edu.miu.mapreduce.Window;
+import edu.miu.utils.HadoopUtils;
 import edu.miu.mapreduce.WordCount;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -22,6 +23,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class PairRF extends Configured implements Tool
 {
@@ -33,28 +35,21 @@ public class PairRF extends Configured implements Tool
 
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            String[] words = value.toString().split("\\s+");
+            List<Window> windowList = edu.miu.utils.FileUtils.extractWindowFromString(value.toString());
 
-            if (words.length > 1) {
-                for (int i = 0; i < words.length - 2; i++) {
-                    String termU = words[i];
-
-                    for (int j = i + 1; j < words.length - 1; j++) {
-                        String termV = words[j];
-                        if (termU.equalsIgnoreCase(termV))
-                            break;
-                        Pair pair = new Pair();
-                        pair.getKey().set(termU);
-                        pair.getValue().set(termV);
-                        System.out.println("XXXXXX" + pair);
-                        context.write(pair, ONE);
-                    }
+            for(Window window: windowList){
+                for(String v: window.getValues()){
+                    Pair pair = new Pair();
+                    pair.setKey(new Text(window.getKey()));
+                    pair.setValue(new Text(v));
+                    context.write(pair, ONE);
                 }
             }
+
         }
     }
 
-    public static class PairRFReducer extends Reducer<Pair, IntWritable, Pair, IntWritable>
+    public static class PairRFReducer extends Reducer<Pair, IntWritable, Text, IntWritable>
     {
         private DoubleWritable totalCount = new DoubleWritable();
         private Text currentWord = new Text("");
@@ -67,8 +62,8 @@ public class PairRF extends Configured implements Tool
             for(IntWritable value: values){
                 sum += value.get();
             }
-            System.out.println(sum);
-            context.write(pair, new IntWritable(sum));
+            Text pairText = new Text(pair.toString());
+            context.write(pairText, new IntWritable(sum));
         }
 
     }

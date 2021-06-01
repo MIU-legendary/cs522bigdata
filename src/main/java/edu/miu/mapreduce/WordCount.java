@@ -3,10 +3,10 @@ package edu.miu.mapreduce;
 import java.io.File;
 import java.io.IOException;
 
+import edu.miu.utils.HadoopUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;

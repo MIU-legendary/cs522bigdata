@@ -1,5 +1,6 @@
 package edu.miu.mapreduce;
 
+import edu.miu.utils.HadoopUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
