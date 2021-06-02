@@ -2,14 +2,12 @@ package edu.miu.mapreducePart2;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
-import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.io.Serializable;
 
-public class Pair implements Writable {
+public class Pair implements WritableComparable<Pair> {
     Text key;
     Text value;
 
@@ -49,26 +47,24 @@ public class Pair implements Writable {
 
     @Override
     public void write(DataOutput out) throws IOException {
-        key.write(out);
-        value.write(out);
+        this.key.write(out);
+        this.value.write(out);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        key.readFields(in);
-        value.readFields(in);
+        this.key.readFields(in);
+        this.value.readFields(in);
     }
 
-//    @Override
-//    public int compareTo(Pair P) {
-//        int keyCompare = this.key.compareTo(P.getKey());
-//        int valueCompare = this.value.compareTo(P.getValue());
-//
-//        if(keyCompare == 0){
-//            if(valueCompare < 0) return -1;
-//            else if (valueCompare > 0) return 1;
-//            return 0;
-//        }
-//        return keyCompare;
-//    }
+    @Override
+    public int compareTo(Pair P) {
+        int keyCompare = this.key.compareTo(P.getKey());
+        int valueCompare = this.value.compareTo(P.getValue());
+
+        if (keyCompare == 0) {
+            return valueCompare;
+        }
+        return keyCompare;
+    }
 }

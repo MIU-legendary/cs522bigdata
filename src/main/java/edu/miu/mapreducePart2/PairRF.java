@@ -33,34 +33,35 @@ public class PairRF extends Configured implements Tool
     public static class PairRFMapper extends Mapper<LongWritable, Text, Text, IntWritable>
     {
 
-        private Text word1 = new Text();
-        private Text word2 = new Text();
-        private Text keyOutput = new Text();
 
-        private Map<Pair, Integer> map= new HashMap<>();
+        private final Text word1 = new Text();
+        private final Text word2 = new Text();
+        private final Text keyOutput = new Text();
+        private Map<Text, Integer> hashMap= new HashMap<>();
+
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             List<Window> windowList = edu.miu.utils.FileUtils.extractWindowFromString(value.toString());
-            for(Window w: windowList){
-                System.out.println("WINDOW " + w);
-            }
             for(Window window: windowList){
                 for(String v: window.getValues()){
-                    word1.set(window.getKey());
-                    word2.set(v);
-                    Pair pair = new Pair(word1, word2);
-                    map.put(pair, map.getOrDefault(pair, 0) + 1);
+                    if(v == null || v.length() == 0) continue;
+                    Text hashKey = new Text(window.getKey() + "-" + v);
+                    if(hashMap.get(hashKey) == null){
+                        hashMap.put(hashKey, 1);
+                    }else {
+                        System.out.println("Helloooo");
+                        hashMap.put(hashKey, hashMap.get(hashKey) + 1);
+                    }
                 }
             }
+            System.out.println(hashMap);
         }
 
         @Override
         protected void cleanup(Context context) throws IOException, InterruptedException {
-            Set<Pair> keySet = map.keySet();
-
-            for(Pair p : keySet){
-                keyOutput.set(p.toString());
-                context.write(keyOutput, new IntWritable(map.get(p)));
+            Set<Text> keySet = hashMap.keySet();
+            for(Text p : keySet){
+                context.write(p, new IntWritable(hashMap.get(p)));
             }
         }
     }
@@ -102,10 +103,13 @@ public class PairRF extends Configured implements Tool
         Job job = new Job(getConf(), "PairRF");
         job.setJarByClass(PairRF.class);
 
+
         job.setMapperClass(PairRFMapper.class);
         job.setReducerClass(PairRFReducer.class);
-        job.setNumReduceTasks(2);
+        job.setNumReduceTasks(1);
 
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(IntWritable.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
 
