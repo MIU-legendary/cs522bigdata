@@ -7,6 +7,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -30,14 +31,10 @@ import java.util.Set;
 public class PairRF extends Configured implements Tool
 {
 
-    public static class PairRFMapper extends Mapper<LongWritable, Text, Text, IntWritable>
+    public static class PairRFMapper extends Mapper<LongWritable, Text, Pair, DoubleWritable>
     {
 
-
-        private final Text word1 = new Text();
-        private final Text word2 = new Text();
-        private final Text keyOutput = new Text();
-        private Map<Text, Integer> hashMap= new HashMap<>();
+        private Map<Pair, Double> hashMap= new HashMap<>();
 
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
@@ -45,42 +42,41 @@ public class PairRF extends Configured implements Tool
             for(Window window: windowList){
                 for(String v: window.getValues()){
                     if(v == null || v.length() == 0) continue;
-                    Text hashKey = new Text(window.getKey() + "-" + v);
-                    if(hashMap.get(hashKey) == null){
-                        hashMap.put(hashKey, 1);
-                    }else {
-                        System.out.println("Helloooo");
-                        hashMap.put(hashKey, hashMap.get(hashKey) + 1);
-                    }
+                    Pair pair = new Pair(window.getKey(), v);
+                    Pair pairStar = new Pair(window.getKey(), "*");
+                    hashMap.merge(pair, (double) 1, Double::sum);
+                    hashMap.merge(pairStar, (double) 1, Double::sum);
                 }
             }
-            System.out.println(hashMap);
         }
 
         @Override
         protected void cleanup(Context context) throws IOException, InterruptedException {
-            Set<Text> keySet = hashMap.keySet();
-            for(Text p : keySet){
-                context.write(p, new IntWritable(hashMap.get(p)));
+            Set<Pair> keySet = hashMap.keySet();
+            for(Pair p : keySet){
+                context.write(p, new DoubleWritable(hashMap.get(p)));
             }
         }
     }
 
-    public static class PairRFReducer extends Reducer<Text, IntWritable, Text, IntWritable>
+    public static class PairRFReducer extends Reducer<Pair, DoubleWritable, Pair, DoubleWritable>
     {
-        private IntWritable result = new IntWritable();
-
+        private DoubleWritable result = new DoubleWritable();
+        private Double total = 0.0;
         @Override
-        public void reduce(Text pair, Iterable<IntWritable> values, Context context)
+        public void reduce(Pair pair, Iterable<DoubleWritable> values, Context context)
                 throws IOException, InterruptedException
         {
-            int sum = 0;
-
-            for(IntWritable value: values){
+            double sum = 0;
+            for(DoubleWritable value: values){
                 sum += value.get();
             }
-            result.set(sum);
-            context.write(pair, result);
+            if(pair.getValue().toString().equals("*")){
+                total = sum;
+            } else {
+                result.set(sum/total);
+                context.write(pair, result);
+            }
         }
     }
 
@@ -108,10 +104,10 @@ public class PairRF extends Configured implements Tool
         job.setReducerClass(PairRFReducer.class);
         job.setNumReduceTasks(1);
 
-        job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(IntWritable.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
+        job.setMapOutputKeyClass(Pair.class);
+        job.setMapOutputValueClass(DoubleWritable.class);
+        job.setOutputKeyClass(Pair.class);
+        job.setOutputValueClass(DoubleWritable.class);
 
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
