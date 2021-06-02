@@ -14,12 +14,14 @@ public final class FileUtils {
             String key = splits[pointer];
             Window w = new Window(key);
             pointer++;
-            while (pointer < splits.length && !splits[pointer].equals(key)) {
-                w.addValue(splits[pointer]);
-                pointer++;
+            int p = pointer;
+            while (p < splits.length && !splits[pointer].equals(key)) {
+                w.addValue(splits[p]);
+                p++;
             }
             res.add(w);
         }
+        System.out.println(res);
         return res;
     }
 }
