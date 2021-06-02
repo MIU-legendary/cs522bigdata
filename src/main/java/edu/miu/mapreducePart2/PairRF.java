@@ -7,7 +7,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -23,56 +22,72 @@ import org.apache.hadoop.util.ToolRunner;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class PairRF extends Configured implements Tool
 {
 
-    public static class PairRFMapper extends Mapper<LongWritable, Text, Pair, IntWritable>
+    public static class PairRFMapper extends Mapper<LongWritable, Text, Text, IntWritable>
     {
 
-        private final IntWritable ONE = new IntWritable(1);
+        private Text word1 = new Text();
+        private Text word2 = new Text();
+        private Text keyOutput = new Text();
 
+        private Map<Pair, Integer> map= new HashMap<>();
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             List<Window> windowList = edu.miu.utils.FileUtils.extractWindowFromString(value.toString());
-
+            for(Window w: windowList){
+                System.out.println("WINDOW " + w);
+            }
             for(Window window: windowList){
                 for(String v: window.getValues()){
-                    Pair pair = new Pair();
-                    pair.setKey(new Text(window.getKey()));
-                    pair.setValue(new Text(v));
-                    context.write(pair, ONE);
+                    word1.set(window.getKey());
+                    word2.set(v);
+                    Pair pair = new Pair(word1, word2);
+                    map.put(pair, map.getOrDefault(pair, 0) + 1);
                 }
             }
+        }
 
+        @Override
+        protected void cleanup(Context context) throws IOException, InterruptedException {
+            Set<Pair> keySet = map.keySet();
+
+            for(Pair p : keySet){
+                keyOutput.set(p.toString());
+                context.write(keyOutput, new IntWritable(map.get(p)));
+            }
         }
     }
 
-    public static class PairRFReducer extends Reducer<Pair, IntWritable, Text, IntWritable>
+    public static class PairRFReducer extends Reducer<Text, IntWritable, Text, IntWritable>
     {
-        private DoubleWritable totalCount = new DoubleWritable();
-        private Text currentWord = new Text("");
-        final private Text CONST_STAR_CHAR = new Text("*");
+        private IntWritable result = new IntWritable();
 
         @Override
-        public void reduce(Pair pair, Iterable<IntWritable> values, Context context)
-                throws IOException, InterruptedException{
+        public void reduce(Text pair, Iterable<IntWritable> values, Context context)
+                throws IOException, InterruptedException
+        {
             int sum = 0;
+
             for(IntWritable value: values){
                 sum += value.get();
             }
-            Text pairText = new Text(pair.toString());
-            context.write(pairText, new IntWritable(sum));
+            result.set(sum);
+            context.write(pair, result);
         }
-
     }
 
     public static void main(String[] args) throws Exception
     {
         Configuration conf = new Configuration();
 
-        int res = ToolRunner.run(conf, new WordCount(), args);
+        int res = ToolRunner.run(conf, new PairRF(), args);
 
         System.exit(res);
     }
@@ -80,14 +95,12 @@ public class PairRF extends Configured implements Tool
     @Override
     public int run(String[] args) throws Exception
     {
-
-
         FileUtils.deleteDirectory(new File(args[1]));
         //FileUtil.fullyDelete(new File(args[1]));
         HadoopUtils.deletePathIfExists(getConf(), args[1]);
 
         Job job = new Job(getConf(), "PairRF");
-        job.setJarByClass(WordCount.class);
+        job.setJarByClass(PairRF.class);
 
         job.setMapperClass(PairRFMapper.class);
         job.setReducerClass(PairRFReducer.class);
