@@ -15,7 +15,7 @@ public final class FileUtils {
             Window w = new Window(key);
             pointer++;
             int p = pointer;
-            while (p < splits.length && !splits[pointer].equals(key)) {
+            while (p < splits.length && !splits[p].equals(key)) {
                 w.addValue(splits[p]);
                 p++;
             }
