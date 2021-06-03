@@ -21,7 +21,6 @@ public final class FileUtils {
             }
             res.add(w);
         }
-        System.out.println("AAAAA" + res);
         return res;
     }
 }
