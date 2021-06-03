@@ -10,3 +10,4 @@
 .idea
 
 .DS_Store
+DATA/input/wordcount/dataFile.txt
