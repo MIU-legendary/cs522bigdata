@@ -22,7 +22,7 @@ public class MyMapWritable extends MapWritable{
         Set<Writable> keySet = this.keySet();
 
         for (Writable key : keySet) {
-            int vl = Integer.parseInt(this.get(key).toString());
+            int vl = (int)Double.parseDouble(this.get(key).toString());
             double fre = (double) vl / total;
 
             DoubleWritable resultFre = new DoubleWritable();
