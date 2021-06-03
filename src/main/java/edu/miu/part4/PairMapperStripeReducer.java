@@ -64,7 +64,7 @@ public class PairMapperStripeReducer extends Configured implements Tool {
         public void reduce(Pair pair, Iterable<DoubleWritable> values, Context context)
                 throws IOException, InterruptedException {
             System.out.println("PPPPPPPPPPP" + pair.getKey() + " === " + wPrev);
-            if (pair.getKey() != wPrev && wPrev != null) {
+            if (!pair.getKey().equals(wPrev) && wPrev != null) {
                 DoubleWritable total = map.get(pair.getValue().toString());
                 MyMapWritable reduceMap = new MyMapWritable();
                 for (String key: map.keySet()) {

@@ -12,7 +12,7 @@ public class MyMapWritable extends MapWritable{
         int sum = 0;
         Set<Writable> keySet = this.keySet();
         for (Object key : keySet) {
-            int vl = Integer.valueOf(this.get(key).toString());
+            int vl = Integer.parseInt(this.get(key).toString());
             sum += vl;
         }
         return sum;
@@ -38,7 +38,7 @@ public class MyMapWritable extends MapWritable{
 
         result.append("[");
         for (Object key : keySet) {
-            result.append("{" + key.toString() + " , " + this.get(key) + "}");
+            result.append("{").append(key.toString()).append(" , ").append(this.get(key)).append("}");
         }
         result.append("]");
         return result.toString();
@@ -47,11 +47,7 @@ public class MyMapWritable extends MapWritable{
     public void add(MyMapWritable from) {
         for (Writable elementKey : from.keySet()) {
             if (containsKey(elementKey)) {
-<<<<<<< HEAD
-                int old = ((IntWritable) get(elementKey)).get() ;
-=======
                 int old = ((IntWritable) get(elementKey)).get();
->>>>>>> 870ca069d70b9227b3f83f16b604259362614c0b
                 int addMore = ((IntWritable) from.get(elementKey)).get();
                 put(elementKey, new IntWritable(old + addMore));
 
