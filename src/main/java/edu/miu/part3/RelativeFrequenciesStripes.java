@@ -113,8 +113,6 @@ public class RelativeFrequenciesStripes extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
-
-
         FileUtils.deleteDirectory(new File(args[1]));
 
         Job job = new Job(getConf(), "RelativeFrequenciesStripes");

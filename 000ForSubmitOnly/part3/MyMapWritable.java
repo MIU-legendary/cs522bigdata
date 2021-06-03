@@ -7,7 +7,7 @@ import org.apache.hadoop.io.Writable;
 
 import java.util.Set;
 
-public class MyMapWritable extends MapWritable{
+class MyMapWritable extends MapWritable {
     public int getTotal() {
         int sum = 0;
         Set<Writable> keySet = this.keySet();
@@ -47,11 +47,7 @@ public class MyMapWritable extends MapWritable{
     public void add(MyMapWritable from) {
         for (Writable elementKey : from.keySet()) {
             if (containsKey(elementKey)) {
-<<<<<<< HEAD
-                int old = ((IntWritable) get(elementKey)).get() ;
-=======
                 int old = ((IntWritable) get(elementKey)).get();
->>>>>>> 870ca069d70b9227b3f83f16b604259362614c0b
                 int addMore = ((IntWritable) from.get(elementKey)).get();
                 put(elementKey, new IntWritable(old + addMore));
 
