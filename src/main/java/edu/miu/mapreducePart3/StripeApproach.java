@@ -77,13 +77,14 @@ public class StripeApproach extends Configured implements Tool {
 
                 for (String v : window.getValues()) {
                     Text neighbor = new Text(v);
-                    childMap.put(neighbor, new IntWritable(1));
+                    IntWritable writeable = (IntWritable)childMap.getOrDefault(neighbor, new IntWritable(0));
+                    childMap.put(neighbor, new IntWritable(writeable.get()  + 1));
                 }
 
                 if (occurrenceMap.containsKey(keyName)) {
-//                    if(keyName.equals("C31")) {
-//                        System.out.println("ok come");
-//                    }
+                    if(keyName.equals("B76")) {
+                        System.out.println("ok come");
+                    }
                     if(childMap.size() > 0) {
                         occurrenceMap.get(keyName).add(childMap);
                     }
@@ -116,8 +117,12 @@ public class StripeApproach extends Configured implements Tool {
         public void reduce(Text key, Iterable<MyMapWritable> values, Context context)
                 throws IOException, InterruptedException {
             MyMapWritable reduceMap = new MyMapWritable();
+            int total = 0;
             for (MyMapWritable listPair : values) {
-                listPair.generateFrequently();
+                total += listPair.getTotal();
+            }
+            for (MyMapWritable listPair : values) {
+                listPair.generateFrequently(total);
                 reduceMap.add(listPair);
             }
             context.write(key, reduceMap);

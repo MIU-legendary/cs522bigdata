@@ -17,13 +17,13 @@ class MyMapWritable extends MapWritable{
         return sum;
     }
 
-    public void generateFrequently() {
+    public void generateFrequently(int total) {
         int rs = 0;
-        int total = getTotal();
+
         Set<Writable> keySet = this.keySet();
         DoubleWritable resultFre = new DoubleWritable();
         for (Writable key : keySet) {
-            int vl = Integer.valueOf(this.get(key).toString());
+            int vl = Integer.parseInt(this.get(key).toString());
             double fre = (double) vl / total;
             resultFre.set(fre);
             this.put(key , resultFre);
