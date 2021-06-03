@@ -2,11 +2,9 @@ package edu.miu.mapreducePart3;
 
 import org.apache.hadoop.io.*;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
-class MyMapWritable extends MapWritable{
+public class MyMapWritable extends MapWritable{
     public int getTotal() {
         int sum = 0;
         Set<Writable> keySet = this.keySet();
@@ -46,9 +44,6 @@ class MyMapWritable extends MapWritable{
     public void add(MyMapWritable from) {
         for (Writable elementKey : from.keySet()) {
             if (containsKey(elementKey)) {
-//                if(elementKey.toString().equals("D76")) {
-//                    System.out.println("hehe");
-//                }
                 int old = ((IntWritable) get(elementKey)).get() ;
                 int addMore = ((IntWritable) from.get(elementKey)).get();
                 put(elementKey, new IntWritable(old + addMore));

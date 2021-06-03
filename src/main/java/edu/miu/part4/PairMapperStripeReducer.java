@@ -2,12 +2,14 @@ package edu.miu.part4;
 
 import edu.miu.mapreduce.Window;
 import edu.miu.mapreducePart2.Pair;
+import edu.miu.mapreducePart3.MyMapWritable;
 import edu.miu.utils.HadoopUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -27,24 +29,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class InMappingStripeRF extends Configured implements Tool
-{
+public class PairMapperStripeReducer extends Configured implements Tool {
 
-    public static class PairRFMapper extends Mapper<LongWritable, Text, Pair, DoubleWritable>
-    {
+    public static class PairRFMapper extends Mapper<LongWritable, Text, Pair, DoubleWritable> {
 
-        private Map<Pair, Double> hashMap= new HashMap<>();
+        private Map<Pair, Double> hashMap = new HashMap<>();
 
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             List<Window> windowList = edu.miu.utils.FileUtils.extractWindowFromString(value.toString());
-            for(Window window: windowList){
-                for(String v: window.getValues()){
-                    if(v == null || v.length() == 0) continue;
+            for (Window window : windowList) {
+                for (String v : window.getValues()) {
+                    if (v == null || v.length() == 0) continue;
                     Pair pair = new Pair(window.getKey(), v);
-                    Pair pairStar = new Pair(window.getKey(), "*");
                     hashMap.merge(pair, (double) 1, Double::sum);
-                    hashMap.merge(pairStar, (double) 1, Double::sum);
                 }
             }
         }
@@ -52,51 +50,67 @@ public class InMappingStripeRF extends Configured implements Tool
         @Override
         protected void cleanup(Context context) throws IOException, InterruptedException {
             Set<Pair> keySet = hashMap.keySet();
-            for(Pair p : keySet){
+            for (Pair p : keySet) {
                 context.write(p, new DoubleWritable(hashMap.get(p)));
             }
         }
     }
 
-    public static class PairRFReducer extends Reducer<Pair, DoubleWritable, Pair, DoubleWritable>
-    {
-        private DoubleWritable result = new DoubleWritable();
-        private Double total = 0.0;
+    public static class PairRFReducer extends Reducer<Pair, DoubleWritable, Pair, MyMapWritable> {
+        private Text wPrev = null;
+        private Map<String, DoubleWritable> map = new HashMap<>();
+
         @Override
         public void reduce(Pair pair, Iterable<DoubleWritable> values, Context context)
-                throws IOException, InterruptedException
-        {
-            double sum = 0;
-            for(DoubleWritable value: values){
-                sum += value.get();
-            }
-            if(pair.getValue().toString().equals("*")){
-                total = sum;
+                throws IOException, InterruptedException {
+            System.out.println("PPPPPPPPPPP" + pair.getKey() + " === " + wPrev);
+            if (pair.getKey() != wPrev && wPrev != null) {
+                DoubleWritable total = map.get(pair.getValue().toString());
+                MyMapWritable reduceMap = new MyMapWritable();
+                for (String key: map.keySet()) {
+                    MyMapWritable listPair = new MyMapWritable();
+                    listPair.put(new Text(key), new Text(key));
+                    listPair.generateFrequently((int)total.get());
+                    reduceMap.add(listPair);
+                }
+                context.write(pair, reduceMap);
+                map = new HashMap<>();
             } else {
-                result.set(sum/total);
-                context.write(pair, result);
+                //merge all the key to
+                double total = 0;
+                for (DoubleWritable doubleWritable: values) {
+                    total += doubleWritable.get();
+                }
+                map.put(pair.getValue().toString(), new DoubleWritable(total));
+                wPrev = pair.getKey();
+                System.out.println("PREVVV" + wPrev);
             }
+        }
+
+        @Override
+        protected void cleanup(Context context) throws IOException, InterruptedException {
+            super.cleanup(context);
+
+
         }
     }
 
-    public static void main(String[] args) throws Exception
-    {
+    public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
 
-        int res = ToolRunner.run(conf, new InMappingStripeRF(), args);
+        int res = ToolRunner.run(conf, new PairMapperStripeReducer(), args);
 
         System.exit(res);
     }
 
     @Override
-    public int run(String[] args) throws Exception
-    {
+    public int run(String[] args) throws Exception {
         FileUtils.deleteDirectory(new File(args[1]));
         //FileUtil.fullyDelete(new File(args[1]));
         HadoopUtils.deletePathIfExists(getConf(), args[1]);
 
         Job job = new Job(getConf(), "PairRF");
-        job.setJarByClass(InMappingStripeRF.class);
+        job.setJarByClass(PairMapperStripeReducer.class);
 
 
         job.setMapperClass(PairRFMapper.class);
