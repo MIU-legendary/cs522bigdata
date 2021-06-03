@@ -5,10 +5,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -31,93 +28,40 @@ import java.util.Map;
 
 public class InMapperWordCount extends Configured implements Tool {
 
-    public static class WordCountMapper extends Mapper<LongWritable, Text, Text, Pair> {
+    public static class InMapperWordCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
         private Text word = new Text();
-        private Map<String, List<Integer>> H = new HashMap<>();
-        private Pair pair = new Pair();
+        private Map<String, Integer> H = new HashMap<>();
 
         @Override
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            try {
-                String[] splitArray = value.toString().split("\\s+");
-                if (!splitArray[splitArray.length - 1].equals("-")) {
-                    List<Integer> listQuantity = H.getOrDefault(splitArray[0], new ArrayList<>());
-                    listQuantity.add(Integer.valueOf(splitArray[splitArray.length - 1]));
-                    H.put(splitArray[0], listQuantity);
-                }
-
-            } catch (Exception $e) {
-                $e.printStackTrace();
+            for (String token : value.toString().split("\\s+"))
+            {
+                H.put(token, H.getOrDefault(token, 0)+ 1);
             }
         }
 
         @Override
         protected void cleanup(Context context) throws IOException, InterruptedException {
-            super.cleanup(context);
+
             for (String key : H.keySet()) {
                 word.set(key);
-                int count = H.get(key).size();
-                int sum = H.get(key).stream().mapToInt(value -> value).sum();
-                pair.setAverage((double) (sum / count));
-                pair.setCount(count);
-                context.write(word, pair);
+                context.write(word, new IntWritable(H.get(key)));
             }
         }
     }
 
-    public static class Pair implements Writable {
-        private Double average = (double) 0;
-        private long count = 1;
+
+
+    public static class InMapperWordCountReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+        private IntWritable result = new IntWritable();
 
         @Override
-        public void write(DataOutput out) throws IOException {
-            out.writeDouble(average);
-            out.writeLong(count);
-        }
-
-        @Override
-        public void readFields(DataInput in) throws IOException {
-            average = in.readDouble();
-            count = in.readLong();
-        }
-
-        public Pair() {
-        }
-
-        public Pair(Double average, long count) {
-            this.average = average;
-            this.count = count;
-        }
-
-        public Double getAverage() {
-            return average;
-        }
-
-        public void setAverage(Double average) {
-            this.average = average;
-        }
-
-        public long getCount() {
-            return count;
-        }
-
-        public void setCount(long count) {
-            this.count = count;
-        }
-    }
-
-    public static class WordCountReducer extends Reducer<Text, Pair, Text, DoubleWritable> {
-        private DoubleWritable result = new DoubleWritable();
-
-        @Override
-        public void reduce(Text key, Iterable<Pair> values, Context context) throws IOException, InterruptedException {
+        public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
             int sum = 0;
-            int count = 0;
-            for (Pair val : values) {
-                sum += val.getAverage() * val.getCount();
-                count += val.getCount();
+            for (IntWritable val : values) {
+                sum += val.get();
             }
-            result.set((double) sum / count);
+            result.set(sum);
             context.write(key, result);
         }
     }
@@ -141,12 +85,12 @@ public class InMapperWordCount extends Configured implements Tool {
         Job job = new Job(getConf(), "WordCount");
         job.setJarByClass(InMapperWordCount.class);
 
-        job.setMapperClass(WordCountMapper.class);
-        job.setReducerClass(WordCountReducer.class);
+        job.setMapperClass(InMapperWordCountMapper.class);
+        job.setReducerClass(InMapperWordCountReducer.class);
         job.setNumReduceTasks(2);
 
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Pair.class);
+        job.setOutputValueClass(IntWritable.class);
 
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
