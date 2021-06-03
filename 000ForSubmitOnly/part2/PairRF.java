@@ -1,13 +1,14 @@
-package edu.miu.part4;
+package edu.miu.mapreducePart2;
 
 import edu.miu.mapreduce.Window;
-import edu.miu.mapreducePart2.Pair;
 import edu.miu.utils.HadoopUtils;
+import edu.miu.mapreduce.WordCount;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -27,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class InMappingStripeRF extends Configured implements Tool
+public class PairRF extends Configured implements Tool
 {
 
     public static class PairRFMapper extends Mapper<LongWritable, Text, Pair, DoubleWritable>
@@ -83,7 +84,7 @@ public class InMappingStripeRF extends Configured implements Tool
     {
         Configuration conf = new Configuration();
 
-        int res = ToolRunner.run(conf, new InMappingStripeRF(), args);
+        int res = ToolRunner.run(conf, new PairRF(), args);
 
         System.exit(res);
     }
@@ -96,7 +97,7 @@ public class InMappingStripeRF extends Configured implements Tool
         HadoopUtils.deletePathIfExists(getConf(), args[1]);
 
         Job job = new Job(getConf(), "PairRF");
-        job.setJarByClass(InMappingStripeRF.class);
+        job.setJarByClass(PairRF.class);
 
 
         job.setMapperClass(PairRFMapper.class);
