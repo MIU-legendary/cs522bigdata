@@ -82,13 +82,9 @@ public class StripeApproach extends Configured implements Tool {
                 }
 
                 if (occurrenceMap.containsKey(keyName)) {
-                    if(keyName.equals("B76")) {
-                        System.out.println("ok come");
-                    }
                     if(childMap.size() > 0) {
                         occurrenceMap.get(keyName).add(childMap);
                     }
-
                 } else {
                     occurrenceMap.put(keyName, childMap);
                 }
@@ -118,10 +114,14 @@ public class StripeApproach extends Configured implements Tool {
                 throws IOException, InterruptedException {
             MyMapWritable reduceMap = new MyMapWritable();
             int total = 0;
+
+            List<MyMapWritable> myList = new ArrayList<>();
             for (MyMapWritable listPair : values) {
                 total += listPair.getTotal();
+                myList.add(listPair);
             }
-            for (MyMapWritable listPair : values) {
+
+            for (MyMapWritable listPair : myList) {
                 listPair.generateFrequently(total);
                 reduceMap.add(listPair);
             }

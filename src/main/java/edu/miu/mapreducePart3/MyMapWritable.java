@@ -18,19 +18,17 @@ class MyMapWritable extends MapWritable{
     }
 
     public void generateFrequently(int total) {
-        int rs = 0;
-
         Set<Writable> keySet = this.keySet();
-        DoubleWritable resultFre = new DoubleWritable();
+
         for (Writable key : keySet) {
             int vl = Integer.parseInt(this.get(key).toString());
             double fre = (double) vl / total;
+
+            DoubleWritable resultFre = new DoubleWritable();
             resultFre.set(fre);
-            this.put(key , resultFre);
+            this.put(key, resultFre);
         }
     }
-
-    private int total = 0;
 
     @Override
     public String toString() {
