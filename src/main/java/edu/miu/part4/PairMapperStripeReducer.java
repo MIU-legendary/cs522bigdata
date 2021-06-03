@@ -9,7 +9,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -60,6 +59,7 @@ public class PairMapperStripeReducer extends Configured implements Tool {
         private String wPrev = null;
         private Map<String, DoubleWritable> map = new HashMap<>();
         private final Text word = new Text();
+
         @Override
         public void reduce(Pair pair, Iterable<DoubleWritable> values, Context context)
                 throws IOException, InterruptedException {
@@ -67,7 +67,7 @@ public class PairMapperStripeReducer extends Configured implements Tool {
                 emitData(context);
             }
             double total = 0;
-            for (DoubleWritable doubleWritable: values) {
+            for (DoubleWritable doubleWritable : values) {
                 total += doubleWritable.get();
             }
             map.put(pair.getValue().toString(), new DoubleWritable(total));
@@ -76,14 +76,14 @@ public class PairMapperStripeReducer extends Configured implements Tool {
 
         private void emitData(Context context) throws IOException, InterruptedException {
             double total = 0;
-            for (String key: map.keySet()) {
+            for (String key : map.keySet()) {
                 total += map.get(key).get();
             }
             MyMapWritable reduceMap = new MyMapWritable();
-            for (String key: map.keySet()) {
+            for (String key : map.keySet()) {
                 MyMapWritable listPair = new MyMapWritable();
                 listPair.put(new Text(key), map.get(key));
-                listPair.generateFrequently((int)total);
+                listPair.generateFrequently((int) total);
                 reduceMap.add(listPair);
             }
             word.set(wPrev);
