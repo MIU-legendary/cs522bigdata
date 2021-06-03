@@ -59,40 +59,22 @@ public class PairMapperStripeReducer extends Configured implements Tool {
     public static class PairRFReducer extends Reducer<Pair, DoubleWritable, Text, MyMapWritable> {
         private String wPrev = null;
         private Map<String, DoubleWritable> map = new HashMap<>();
-        private Text word = new Text();
+        private final Text word = new Text();
         @Override
         public void reduce(Pair pair, Iterable<DoubleWritable> values, Context context)
                 throws IOException, InterruptedException {
-            System.out.println("PPPPPPPPPPP" + pair.getKey() + " === " + wPrev);
             if (!pair.getKey().toString().equals(wPrev) && wPrev != null) {
-                double total = 0;
-                for (String key: map.keySet()) {
-                    total += map.get(key).get();
-                }
-                MyMapWritable reduceMap = new MyMapWritable();
-                for (String key: map.keySet()) {
-                    MyMapWritable listPair = new MyMapWritable();
-                    listPair.put(new Text(key), map.get(key));
-                    listPair.generateFrequently((int)total);
-                    reduceMap.add(listPair);
-                }
-                word.set(wPrev);
-                context.write(word, reduceMap);
-                map = new HashMap<>();
+                emitData(context);
             }
-            //merge all the key to
             double total = 0;
             for (DoubleWritable doubleWritable: values) {
                 total += doubleWritable.get();
             }
             map.put(pair.getValue().toString(), new DoubleWritable(total));
             wPrev = pair.getKey().toString();
-            System.out.println("PREVVV" + wPrev);
         }
 
-        @Override
-        protected void cleanup(Context context) throws IOException, InterruptedException {
-            super.cleanup(context);
+        private void emitData(Context context) throws IOException, InterruptedException {
             double total = 0;
             for (String key: map.keySet()) {
                 total += map.get(key).get();
@@ -107,7 +89,12 @@ public class PairMapperStripeReducer extends Configured implements Tool {
             word.set(wPrev);
             context.write(word, reduceMap);
             map = new HashMap<>();
+        }
 
+        @Override
+        protected void cleanup(Context context) throws IOException, InterruptedException {
+            super.cleanup(context);
+            emitData(context);
         }
     }
 
