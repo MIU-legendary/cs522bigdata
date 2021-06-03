@@ -82,7 +82,7 @@ public class InMapperWordCount extends Configured implements Tool {
         //FileUtil.fullyDelete(new File(args[1]));
         HadoopUtils.deletePathIfExists(getConf(), args[1]);
 
-        Job job = new Job(getConf(), "WordCount");
+        Job job = new Job(getConf(), "InMapperWordCount");
         job.setJarByClass(InMapperWordCount.class);
 
         job.setMapperClass(InMapperWordCountMapper.class);

@@ -71,7 +71,7 @@ public class WordCountAverage extends Configured implements Tool {
                 context.write(word, wQuantity);
 
             } catch (Exception $e) {
-                $e.printStackTrace();
+                System.out.println("Has error parse");
             }
         }
     }
