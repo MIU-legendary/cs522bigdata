@@ -61,38 +61,37 @@ public class StripeRelativeFrequency extends Configured implements Tool {
 
     public static class StripeApproachMapper extends Mapper<LongWritable, Text, Text, MyMapWritable> {
         private final Text word = new Text();
-        private final Map<String, MyMapWritable> occurrenceMap = new HashMap<String, MyMapWritable>();
-        private final Map<String, Integer> totalMap = new HashMap<String, Integer>();
+        private final Map<String, MyMapWritable> G = new HashMap<String, MyMapWritable>();
 
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             List<Window> windowList = edu.miu.utils.FileUtils.extractWindowFromString(value.toString());
 
             for (Window window : windowList) {
-                MyMapWritable childMap = new MyMapWritable();
+                MyMapWritable H = new MyMapWritable();
 
                 word.set(window.getKey());
                 String keyName = window.getKey();
 
                 for (String v : window.getValues()) {
                     Text neighbor = new Text(v);
-                    IntWritable writeable = (IntWritable) childMap.getOrDefault(neighbor, new IntWritable(0));
-                    childMap.put(neighbor, new IntWritable(writeable.get() + 1));
+                    IntWritable writeable = (IntWritable) H.getOrDefault(neighbor, new IntWritable(0));
+                    H.put(neighbor, new IntWritable(writeable.get() + 1));
                 }
 
-                if (occurrenceMap.containsKey(keyName)) {
-                    if (childMap.size() > 0) {
-                        occurrenceMap.get(keyName).add(childMap);
+                if (G.containsKey(keyName)) {
+                    if (H.size() > 0) {
+                        G.get(keyName).add(H);
                     }
                 } else {
-                    occurrenceMap.put(keyName, childMap);
+                    G.put(keyName, H);
                 }
             }
         }
 
         @Override
         protected void cleanup(Context context) throws IOException, InterruptedException {
-            occurrenceMap.forEach((key, childMap) -> {
+            G.forEach((key, childMap) -> {
                 try {
                     word.set(key);
                     context.write(word, childMap);
@@ -109,7 +108,7 @@ public class StripeRelativeFrequency extends Configured implements Tool {
         @Override
         public void reduce(Text key, Iterable<MyMapWritable> values, Context context)
                 throws IOException, InterruptedException {
-            MyMapWritable reduceMap = new MyMapWritable();
+            MyMapWritable Hf = new MyMapWritable();
 
             int total = 0;
             List<MyMapWritable> myList = new ArrayList<>();
@@ -120,9 +119,9 @@ public class StripeRelativeFrequency extends Configured implements Tool {
 
             for (MyMapWritable listPair : myList) {
                 listPair.generateFrequently(total);
-                reduceMap.add(listPair);
+                Hf.add(listPair);
             }
-            context.write(key, reduceMap);
+            context.write(key, Hf);
         }
     }
 }

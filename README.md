@@ -19,30 +19,30 @@ pull github project to C:\workspace\MIU\big-data-example ( or any path you want 
 
 value = C:\workspace\MIU\big-data-example\HADOOP, HADOOP folder data from this GitHub.
 
-![img_15.png](img_15.png)
+![img_15.png](imgs/img_15.png)
 
-![img_1.png](img_1.png)
+![img_1.png](imgs/img_1.png)
 
 - Restart Intellij IDE, now you can run the mapreduce / spark locally [Debuggable]
 
-![img_14.png](img_14.png)
+![img_14.png](imgs/img_14.png)
 
 # Part 2 . Pseudo Mode - Single Cluster Hadoop Instance [Cloudera] 
 1. expose daemon docker port 2375 to intellij : Open Docker For Desktop -> Setting :
    
-   ![img_13.png](img_13.png)
-   ![img_3.png](img_3.png)
+   ![img_13.png](imgs/img_13.png)
+   ![img_3.png](imgs/img_3.png)
 
    Click to "Apply & Restart"
 
    - [intellij] in Services tab, click on Docker 
      
-   ![img_4.png](img_4.png)
-   ![img_16.png](img_16.png)
+   ![img_4.png](imgs/img_4.png)
+   ![img_16.png](imgs/img_16.png)
    
    - click on play icon on Services and Docker connected to Intellij
      
-     ![img_5.png](img_5.png)
+     ![img_5.png](imgs/img_5.png)
      
 2. run Docker images :
 - by command 
@@ -50,21 +50,21 @@ value = C:\workspace\MIU\big-data-example\HADOOP, HADOOP folder data from this G
 
 - or run it from intellij IDE 
 
-![img_2.png](img_2.png)
+![img_2.png](imgs/img_2.png)
 
-![img_6.png](img_6.png)
+![img_6.png](imgs/img_6.png)
 
 - popup appears on window , allow Docker to share with your local file --> press "Share It"
 
-![img_7.png](img_7.png)
+![img_7.png](imgs/img_7.png)
 - Cloudera installed
 
-![img_8.png](img_8.png)
+![img_8.png](imgs/img_8.png)
 
 - now you can submit jars file to execute on map-reduce   
 3. build jars file and public to share folder, run both "jar" then "publish" tasks
 
-  ![img_10.png](img_10.png)
+  ![img_10.png](imgs/img_10.png)
 
 
 
@@ -77,16 +77,16 @@ value = C:\workspace\MIU\big-data-example\HADOOP, HADOOP folder data from this G
 
 2. restart cloudera hadoop service.
 
-![img_17.png](img_17.png)
+![img_17.png](imgs/img_17.png)
 
-![img_18.png](img_18.png)
+![img_18.png](imgs/img_18.png)
 
 
 2. submit the jars to hadoop.
 
 - in "Services" tab in Intellij, right click on cloudera image, click on "create terminal"
   
-  ![img_11.png](img_11.png)
+  ![img_11.png](imgs/img_11.png)
 
 - execute the hadoop command to run map-reduce :
 > hadoop fs -mkdir input
@@ -112,6 +112,6 @@ value = C:\workspace\MIU\big-data-example\HADOOP, HADOOP folder data from this G
 You should STOP/START DOCKER service in Services Tab, 
 try not to run docker-compose after upgrading to java 8(if you run docker-compose then you should upgrade to java 8 again because it pulls the original image from cloudera which is java 7)  
 
-![img_17.png](img_17.png)
+![img_17.png](imgs/img_17.png)
 
-![img_18.png](img_18.png)
+![img_18.png](imgs/img_18.png)

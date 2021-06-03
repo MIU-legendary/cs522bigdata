@@ -7,12 +7,12 @@ import org.apache.hadoop.io.Writable;
 
 import java.util.Set;
 
-class MyMapWritable extends MapWritable {
+public class MyMapWritable extends MapWritable{
     public int getTotal() {
         int sum = 0;
         Set<Writable> keySet = this.keySet();
         for (Object key : keySet) {
-            int vl = Integer.valueOf(this.get(key).toString());
+            int vl = Integer.parseInt(this.get(key).toString());
             sum += vl;
         }
         return sum;
@@ -38,7 +38,7 @@ class MyMapWritable extends MapWritable {
 
         result.append("[");
         for (Object key : keySet) {
-            result.append("{" + key.toString() + " , " + this.get(key) + "}");
+            result.append("{").append(key.toString()).append(" , ").append(this.get(key)).append("}");
         }
         result.append("]");
         return result.toString();
