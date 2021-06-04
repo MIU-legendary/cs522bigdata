@@ -1,12 +1,13 @@
 
 import org.apache.spark._
+import org.apache.spark
 
 import java.io._
 
 
 case class Person(name: String, age: Int)
 
-case class VocabularyPerPerson(num: String, year: String, sex: String, edu: String, vocab: String)
+case class VocabularyPerPerson(num: String, year: Int, sex: String, edu: Int, vocab: Int)
 
 case class result(cato: String, mean: Double, variance: Double)
 
@@ -17,10 +18,8 @@ object bootstrapcalculation extends App {
   // Exploring SparkSQL
   // Initialize an SQLContext
   val sqlContext= new org.apache.spark.sql.SQLContext(sc)
-  import sqlContext._
-  import sqlContext.implicits._
   import org.apache.spark.sql.functions._
-
+  import sqlContext.implicits._
 
   sc.setLogLevel("WARN")
 
@@ -35,7 +34,12 @@ object bootstrapcalculation extends App {
 
   val vocalData = headerAndRows.filter(_(0) != header(0))
   val vocabulary = vocalData
-    .map(c => VocabularyPerPerson(c(0), c(1), c(2), c(3), c(4)))
+    .map(c => VocabularyPerPerson(
+      c(0).toString,
+      c(1).toString.toInt,
+      c(2).toString,
+      c(3).toString.toInt,
+      c(4).toString.toInt))
     .toDF
 
   vocabulary.printSchema()
@@ -44,21 +48,24 @@ object bootstrapcalculation extends App {
 
   val sample = vocabulary.sample(withReplacement = true,0.25)
 
-  sample.show()
+  val meanEdu = sample.groupBy("edu")
+    .agg(avg("vocab").alias("Mean"),
+      variance("vocab").alias("Variance"))
+    .orderBy("edu")
 
-  sample.groupBy("sex").agg(avg("vocab")).show()
 
-  val time = 0
-  val pairVocab = new Pair(0,0)
-  val pairEdu = new Pair(0,0)
-  for (time <- 1 to 1000){
-    val resample = sample.sample(withReplacement = false, 1)
-    resample.
-      foreach(x => {
-        val todouble = x.getAs("edu").toString.toDouble
-        println(todouble)
-      })
-  }
+  println("STEPPPP 3")
+  meanEdu.show()
+
+
+  sample.groupBy("edu").agg(avg("vocab")).show()
+
+//  for (time <- 1 to 1000){
+//    val resample = sample.sample(withReplacement = false, 1)
+//    resample.
+//      foreach(x => {
+//      })
+//  }
 
 
 
@@ -83,5 +90,4 @@ object bootstrapcalculation extends App {
 //  dfs1.select("name").show()
 //  dfs1.filter(dfs("age") > 23).show()
 //  dfs1.groupBy("age").count().show()
-
 }
