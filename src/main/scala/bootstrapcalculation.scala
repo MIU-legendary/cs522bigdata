@@ -9,7 +9,9 @@ case class Person(name: String, age: Int)
 
 case class VocabularyPerPerson(num: String, year: Int, sex: String, edu: Int, vocab: Int)
 
-case class result(edu: Int, vocab: Int)
+case class result(edu: Int, mean: Double, variance: Double)
+
+case class ResampleDF(edu: Int, vocab: Int)
 
 object bootstrapcalculation extends App {
   val conf = new SparkConf().setAppName("Spark Sort").setMaster("local")
@@ -51,6 +53,7 @@ object bootstrapcalculation extends App {
     .orderBy("edu")
     .withColumnRenamed("edu","Category")
 
+
   writer.println("STEP 3 RESULT")
   meanEdu.show()
   meanEdu.foreach(x => writer.println(x.toString()
@@ -58,8 +61,10 @@ object bootstrapcalculation extends App {
     .replace("]","")))
 
 
+
+
   // Step 4 get sample of dataset with no replacement and fraction is 25%
-  val sample = vocabulary.sample(withReplacement = false,0.25)
+  val sample = vocabulary.sample(withReplacement = false,0.25).cache()
 
   // Create blank DF with schema result
   var resultDF = Seq.empty[result].toDF()
@@ -68,17 +73,20 @@ object bootstrapcalculation extends App {
   for (time <- 1 to 10){
     val resample = sample.sample(withReplacement = true, 1)
     val resampleDF = resample
-      .map(c =>result(c(3).toString.toInt
+      .map(c =>ResampleDF(c(3).toString.toInt
         ,c(4).toString.toInt))
       .toDF
 
+    val calculate = resampleDF.groupBy("edu")
+      .agg(avg("vocab").alias("mean"),
+      variance("vocab").alias("variance"))
     // Add resampleDF to resultDF
-    resultDF = resultDF.union(resampleDF)
+    resultDF = resultDF.unionAll(calculate)
   }
 
   val finalResult = resultDF.groupBy("edu")
-    .agg(avg("vocab").alias("Mean"),
-      variance("vocab").alias("Variance"))
+    .agg(avg("mean").alias("MeanAvg"),
+      avg("variance").alias("VarianceAvg"))
     .orderBy("edu")
     .withColumnRenamed("edu","Category")
 
@@ -91,4 +99,5 @@ object bootstrapcalculation extends App {
   finalResult.show()
 
   writer.close()
+
 }
