@@ -25,7 +25,7 @@ object bootstrapcalculation extends App {
 
   val writer = new PrintWriter(new File("result.txt"))
 
-  writer.write("Hello World")
+  writer.println("Spark Scala Project")
 
   var csv = sc.textFile("DATA/scala_input/Vocab.csv")
 
@@ -43,9 +43,7 @@ object bootstrapcalculation extends App {
     .toDF
 
   vocabulary.printSchema()
-
-  vocabulary.select("edu").show(5)
-
+//  vocabulary.show(10)
 
   val meanEdu = vocabulary.groupBy("edu")
     .agg(avg("vocab").alias("Mean"),
@@ -53,17 +51,18 @@ object bootstrapcalculation extends App {
     .orderBy("edu")
     .withColumnRenamed("edu","Category")
 
-
-  println("STEPPPP 3")
+  writer.println("STEP 3 RESULT")
   meanEdu.show()
+  meanEdu.foreach(x => writer.println(x.toString()
+    .replace("[","")
+    .replace("]","")))
+
 
   // Step 4 get sample of dataset with no replacement and fraction is 25%
   val sample = vocabulary.sample(withReplacement = false,0.25)
 
-
   // Create blank DF with schema result
   var resultDF = Seq.empty[result].toDF()
-
 
   // Step 5 get resample for many time
   for (time <- 1 to 10){
@@ -77,37 +76,19 @@ object bootstrapcalculation extends App {
     resultDF = resultDF.union(resampleDF)
   }
 
-  val step5Result = resultDF.groupBy("edu")
+  val finalResult = resultDF.groupBy("edu")
     .agg(avg("vocab").alias("Mean"),
       variance("vocab").alias("Variance"))
     .orderBy("edu")
     .withColumnRenamed("edu","Category")
 
 
-  println("STEPPP 5")
-  step5Result.show()
+  writer.println("STEP 5 RESULT")
+  finalResult.foreach(x => writer.println(x.toString()
+    .replace("[","")
+    .replace("]","")))
 
+  finalResult.show()
 
-
-//
-//  header.foreach(println)
-//  creditCardData.first().foreach(println)
-
-
-//  val res = counts.collect()
-//  for (n <- res) writer.println(n.toString())
-//
-//  writer.close()
-//
-//  val sqlcontext = new org.apache.spark.sql.SQLContext(sc)
-//
-//  val dfs = sqlcontext.read.json("data/Emp.json")
-//
-//  dfs.show()
-//  dfs.printSchema()
-//  val dfs1 = dfs.filter(!dfs("name").isNull)
-//  dfs1.show()
-//  dfs1.select("name").show()
-//  dfs1.filter(dfs("age") > 23).show()
-//  dfs1.groupBy("age").count().show()
+  writer.close()
 }
